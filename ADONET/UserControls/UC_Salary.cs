@@ -12,7 +12,7 @@ namespace ADONET.UserControls
         {
             InitializeComponent();
             LoadData();
-            SetupReadOnlyFields(); 
+            SetupReadOnlyFields();
         }
 
         private void SetupReadOnlyFields()
@@ -24,13 +24,30 @@ namespace ADONET.UserControls
 
         public void LoadData()
         {
-            using (SqlConnection conn = DatabaseHelper.GetConnection())
+            try
             {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT ma_nv, ho_ten, chuc_vu, luong FROM nhan_vien", conn);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                dataGridView1.DataSource = dt;
+                using (SqlConnection conn = DatabaseHelper.GetConnection())
+                {
+                    string query = @"SELECT nv.ma_nv, nv.ho_ten, cv.TenCV, nv.luong 
+                                     FROM nhan_vien nv 
+                                     LEFT JOIN ChucVu cv ON nv.MaCV = cv.MaCV";
+
+                    SqlDataAdapter da = new SqlDataAdapter(query, conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    dataGridView1.DataSource = dt;
+
+                    if (dataGridView1.Columns.Count > 0)
+                    {
+                        dataGridView1.Columns["ma_nv"].HeaderText = "Mã NV";
+                        dataGridView1.Columns["ho_ten"].HeaderText = "Họ và Tên";
+                        dataGridView1.Columns["TenCV"].HeaderText = "Chức Vụ";
+                        dataGridView1.Columns["luong"].HeaderText = "Lương";
+                        dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                    }
+                }
             }
+            catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
         }
 
         private void btnUpdate_Click(object sender, EventArgs e)
@@ -76,7 +93,7 @@ namespace ADONET.UserControls
                 DataGridViewRow row = dataGridView1.Rows[e.RowIndex];
                 txtMaNV.Text = row.Cells["ma_nv"].Value.ToString();
                 txtHoTen.Text = row.Cells["ho_ten"].Value.ToString();
-                txtChucVu.Text = row.Cells["chuc_vu"].Value.ToString();
+                txtChucVu.Text = row.Cells["TenCV"].Value.ToString();
                 txtLuong.Text = row.Cells["luong"].Value.ToString();
                 txtLuong.Focus();
                 txtLuong.SelectAll();

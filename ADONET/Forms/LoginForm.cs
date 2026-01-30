@@ -1,13 +1,31 @@
 ﻿using ADONET.Data;
 using System;
 using System.Data.SqlClient;
+using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace ADONET.Forms
 {
     public partial class LoginForm : Form
     {
-        public LoginForm() { InitializeComponent(); }
+        [DllImport("user32.dll", EntryPoint = "ReleaseCapture")]
+        private extern static void ReleaseCapture();
+        [DllImport("user32.dll", EntryPoint = "SendMessage")]
+        private extern static void SendMessage(System.IntPtr hwnd, int wmsg, int wparam, int lparam);
+
+        public LoginForm()
+        {
+            InitializeComponent();
+            this.MouseDown += Form_Drag;
+            this.pnlLeft.MouseDown += Form_Drag;
+        }
+
+        private void Form_Drag(object sender, MouseEventArgs e)
+        {
+            ReleaseCapture();
+            SendMessage(this.Handle, 0x112, 0xf012, 0);
+        }
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
@@ -30,10 +48,23 @@ namespace ADONET.Forms
                     }
                     else
                     {
-                        MessageBox.Show("Sai tài khoản hoặc mật khẩu!");
+                        MessageBox.Show("Sai tài khoản hoặc mật khẩu!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi hệ thống: " + ex.Message);
+                }
+            }
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ClassStyle |= 0x20000;
+                return cp;
             }
         }
     }
